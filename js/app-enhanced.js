@@ -1280,7 +1280,7 @@ function updateColabBanner(module) {
     if (existing) existing.remove();
     if (!module || !module.colabNotebook) return;
     const nbPath = module.colabNotebook.replace('./', '');
-    const colabUrl = `https://colab.research.google.com/github/eduardd76/Claude_code_course/blob/main/ai-networking-security-academy/${nbPath}`;
+    const colabUrl = `https://colab.research.google.com/github/eduardd76/academy_vexpertai/blob/main/${nbPath}`;
     const banner = document.createElement('div');
     banner.className = 'open-colab-banner';
     banner.innerHTML =
