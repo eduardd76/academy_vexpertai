@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReAct Reasoning Loop</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0f1e;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    overflow: hidden;
+  }
+
+  .scene {
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+  }
+
+  /* ── Title ── */
+  .title {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .title h2 {
+    color: #e2e8f0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .title p {
+    color: #64748b;
+    font-size: 0.72rem;
+    margin-top: 6px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── Main layout ── */
+  .loop-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 0;
+    position: relative;
+    align-items: start;
+  }
+
+  /* ── Node base ── */
+  .node {
+    border: 1.5px solid #1e293b;
+    border-radius: 14px;
+    padding: 18px 16px;
+    position: relative;
+    transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
+    background: #0f172a;
+    min-height: 140px;
+  }
+
+  .node.active {
+    border-color: var(--node-color);
+    box-shadow: 0 0 0 1px var(--node-color), 0 0 28px var(--node-glow), inset 0 0 20px var(--node-inner);
+    background: var(--node-bg);
+  }
+
+  .node-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #334155;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: color 0.4s;
+  }
+  .node.active .node-label { color: var(--node-color); }
+
+  .node-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: background 0.4s;
+    flex-shrink: 0;
+  }
+  .node.active .node-icon { background: var(--node-color); }
+
+  .node-content {
+    min-height: 60px;
+    font-size: 0.7rem;
+    line-height: 1.6;
+    color: #1e293b;
+    transition: color 0.5s;
+  }
+  .node.active .node-content { color: #cbd5e1; }
+
+  .node-content .line {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.35s, transform 0.35s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .node.active .node-content .line { opacity: 1; transform: translateY(0); }
+  .node.active .node-content .line:nth-child(2) { transition-delay: 0.12s; }
+  .node.active .node-content .line:nth-child(3) { transition-delay: 0.24s; }
+  .node.active .node-content .line:nth-child(4) { transition-delay: 0.36s; }
+
+  .highlight { color: #f5a623; font-weight: 600; }
+  .success   { color: #34d399; font-weight: 600; }
+  .warn      { color: #f87171; font-weight: 600; }
+  .muted     { color: #475569; }
+
+  /* ── Individual node colours ── */
+  #node-observe {
+    --node-color: #38bdf8;
+    --node-glow: rgba(56,189,248,0.18);
+    --node-inner: rgba(56,189,248,0.04);
+    --node-bg: rgba(56,189,248,0.04);
+    grid-column: 2; grid-row: 1;
+  }
+  #node-reason {
+    --node-color: #a78bfa;
+    --node-glow: rgba(167,139,250,0.18);
+    --node-inner: rgba(167,139,250,0.04);
+    --node-bg: rgba(167,139,250,0.04);
+    grid-column: 3; grid-row: 2;
+  }
+  #node-act {
+    --node-color: #f5a623;
+    --node-glow: rgba(245,166,35,0.18);
+    --node-inner: rgba(245,166,35,0.04);
+    --node-bg: rgba(245,166,35,0.04);
+    grid-column: 2; grid-row: 3;
+  }
+  #node-memory {
+    --node-color: #34d399;
+    --node-glow: rgba(52,211,153,0.18);
+    --node-inner: rgba(52,211,153,0.04);
+    --node-bg: rgba(52,211,153,0.04);
+    grid-column: 1; grid-row: 2;
+  }
+  #node-verify {
+    --node-color: #fb7185;
+    --node-glow: rgba(251,113,133,0.18);
+    --node-inner: rgba(251,113,133,0.04);
+    --node-bg: rgba(251,113,133,0.04);
+    grid-column: 2; grid-row: 2;
+    display: none;
+  }
+
+  /* ── SVG arrows overlay ── */
+  .arrows-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    overflow: visible;
+  }
+
+  .arrow-path {
+    fill: none;
+    stroke: #1e293b;
+    stroke-width: 1.5;
+    transition: stroke 0.4s, stroke-width 0.4s;
+    marker-end: url(#arrowhead-dim);
+  }
+  .arrow-path.active {
+    stroke-width: 2;
+    animation: flowPulse 0.6s ease-out;
+  }
+  .arrow-observe-reason  { --active-color: #a78bfa; }
+  .arrow-reason-act      { --active-color: #f5a623; }
+  .arrow-act-observe     { --active-color: #38bdf8; }
+  .arrow-memory-reason   { --active-color: #34d399; }
+  .arrow-reason-verify   { --active-color: #fb7185; }
+
+  .arrow-path.active { stroke: var(--active-color); marker-end: url(#arrowhead-active); }
+
+  @keyframes flowPulse {
+    0%   { stroke-dashoffset: 60; stroke-dasharray: 60 200; }
+    100% { stroke-dashoffset: 0;  stroke-dasharray: 200 0; }
+  }
+
+  /* ── Data packet dot ── */
+  .packet {
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #38bdf8;
+    box-shadow: 0 0 8px currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  /* ── Confidence meter ── */
+  .confidence-bar {
+    grid-column: 1 / 4;
+    grid-row: 4;
+    margin-top: 24px;
+    background: #0f172a;
+    border: 1.5px solid #1e293b;
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .conf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .conf-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #475569;
+  }
+  .conf-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #f5a623;
+    transition: color 0.5s;
+    font-variant-numeric: tabular-nums;
+  }
+  .conf-value.high { color: #34d399; }
+  .conf-track {
+    height: 6px;
+    background: #1e293b;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .conf-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #a78bfa, #f5a623);
+    transition: width 0.8s cubic-bezier(0.4,0,0.2,1), background 0.5s;
+  }
+  .conf-fill.high { background: linear-gradient(90deg, #34d399, #38bdf8); }
+
+  /* ── Status bar ── */
+  .status-bar {
+    grid-column: 1 / 4;
+    grid-row: 5;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 28px;
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #334155;
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.running { background: #38bdf8; animation: blink 1s infinite; }
+  .status-dot.done    { background: #34d399; animation: none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .status-text {
+    font-size: 0.68rem;
+    color: #475569;
+    letter-spacing: 0.06em;
+    transition: color 0.3s;
+  }
+  .status-text.active { color: #94a3b8; }
+
+  /* ── Phase badge on node ── */
+  .phase-badge {
+    position: absolute;
+    top: -10px; right: 12px;
+    background: var(--node-color, #334155);
+    color: #0a0f1e;
+    font-size: 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    text-transform: uppercase;
+  }
+  .node.active .phase-badge { opacity: 1; }
+
+  /* ── Iteration counter ── */
+  .iter-badge {
+    grid-column: 3; grid-row: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-top: 4px;
+    padding-right: 4px;
+  }
+  .iter-label { font-size: 0.6rem; color: #334155; letter-spacing: 0.1em; text-transform: uppercase; }
+  .iter-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+    line-height: 1;
+    transition: color 0.4s;
+    font-variant-numeric: tabular-nums;
+  }
+  .iter-value.active { color: #a78bfa; }
+
+  /* ── Grid spacers ── */
+  .spacer-tl { grid-column: 1; grid-row: 1; }
+  .spacer-tr { grid-column: 3; grid-row: 1; }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .loop-container { grid-template-columns: 1fr 1fr; gap: 8px; }
+    #node-observe  { grid-column: 1; grid-row: 1; }
+    #node-reason   { grid-column: 2; grid-row: 1; }
+    #node-act      { grid-column: 1; grid-row: 2; }
+    #node-memory   { grid-column: 2; grid-row: 2; }
+    .spacer-tl, .spacer-tr, .iter-badge { display: none; }
+    .confidence-bar { grid-column: 1/3; grid-row: 3; }
+    .status-bar { grid-column: 1/3; grid-row: 4; }
+    .arrows-svg { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <div class="title">
+    <h2>The ReAct Reasoning Loop</h2>
+    <p>Observe &rarr; Reason &rarr; Act &rarr; Repeat until confident</p>
+  </div>
+
+  <div class="loop-container" id="loop">
+
+    <!-- Spacers -->
+    <div class="spacer-tl"></div>
+    <div class="spacer-tr"></div>
+
+    <!-- OBSERVE -->
+    <div class="node" id="node-observe">
+      <div class="phase-badge">Phase 1</div>
+      <div class="node-label">
+        <div class="node-icon">👁</div>
+        Observe
+      </div>
+      <div class="node-content" id="content-observe">
+        <div class="line muted">Waiting for input...</div>
+      </div>
+    </div>
+
+    <!-- MEMORY -->
+    <div class="node" id="node-memory">
+      <div class="phase-badge">Context</div>
+      <div class="node-label">
+        <div class="node-icon">🧠</div>
+        Memory
+      </div>
+      <div class="node-content" id="content-memory">
+        <div class="line muted">Idle</div>
+      </div>
+    </div>
+
+    <!-- REASON (center) -->
+    <div class="node" id="node-reason">
+      <div class="phase-badge">Phase 2</div>
+      <div class="node-label">
+        <div class="node-icon">⚡</div>
+        Reason
+      </div>
+      <div class="node-content" id="content-reason">
+        <div class="line muted">No hypothesis yet</div>
+      </div>
+    </div>
+
+    <!-- VERIFY (hidden, replaces REASON on final step) -->
+    <div class="node" id="node-verify">
+      <div class="phase-badge">Final</div>
+      <div class="node-label">
+        <div class="node-icon">✅</div>
+        Verify
+      </div>
+      <div class="node-content" id="content-verify">
+        <div class="line"></div>
+      </div>
+    </div>
+
+    <!-- Iteration badge -->
+    <div class="iter-badge">
+      <div class="iter-label">Iteration</div>
+      <div class="iter-value" id="iter-value">0</div>
+    </div>
+
+    <!-- ACT -->
+    <div class="node" id="node-act">
+      <div class="phase-badge">Phase 3</div>
+      <div class="node-label">
+        <div class="node-icon">🔧</div>
+        Act
+      </div>
+      <div class="node-content" id="content-act">
+        <div class="line muted">No tool selected</div>
+      </div>
+    </div>
+
+    <!-- SVG arrows -->
+    <svg class="arrows-svg" id="arrows-svg">
+      <defs>
+        <marker id="arrowhead-dim" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#1e293b"/>
+        </marker>
+        <marker id="arrowhead-active" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+          <polygon points="0 0, 8 3, 0 6" fill="#ffffff" id="arrow-poly"/>
+        </marker>
+      </defs>
+      <!-- Paths drawn by JS -->
+    </svg>
+
+    <!-- Confidence bar -->
+    <div class="confidence-bar">
+      <div class="conf-header">
+        <span class="conf-label">Confidence Score</span>
+        <span class="conf-value" id="conf-value">0%</span>
+      </div>
+      <div class="conf-track">
+        <div class="conf-fill" id="conf-fill"></div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <div class="status-text" id="status-text">Click anywhere to start the simulation</div>
+    </div>
+
+  </div><!-- /loop-container -->
+</div><!-- /scene -->
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// Animation sequence — OSPF INIT troubleshooting scenario
+// ═══════════════════════════════════════════════════════════
+
+const STEPS = [
+  {
+    phase: 'observe',
+    status: 'Incident received — starting investigation...',
+    observe: [
+      '<span class="highlight">ALERT:</span> OSPF nbr 3.3.3.3',
+      'State: <span class="warn">INIT</span> on rtr-01 Gi0/1',
+      'Duration: 20 min',
+      '<span class="muted">Branch office unreachable</span>',
+    ],
+    memory: ['<span class="muted">Searching knowledge base...</span>'],
+    reason: ['<span class="muted">Awaiting context...</span>'],
+    act:    ['<span class="muted">No tool selected yet</span>'],
+    confidence: 0,
+    iteration: 0,
+  },
+  {
+    phase: 'memory',
+    status: 'Searching memory for similar incidents...',
+    observe: [
+      '<span class="highlight">ALERT:</span> OSPF nbr 3.3.3.3',
+      'State: <span class="warn">INIT</span> on rtr-01 Gi0/1',
+      'Duration: 20 min',
+    ],
+    memory: [
+      '<span class="success">INC-2089</span> match: 87%',
+      'ACL blocking 224.0.0.5',
+      '<span class="success">INC-2187</span> match: 64%',
+      'MTU mismatch on core link',
+    ],
+    reason: ['<span class="muted">Reading memory context...</span>'],
+    act:    ['<span class="muted">No tool selected yet</span>'],
+    confidence: 20,
+    iteration: 0,
+  },
+  {
+    phase: 'reason',
+    status: 'Reasoning about likely root causes...',
+    observe: [
+      'State: <span class="warn">INIT</span> = one-way comm.',
+      '<span class="muted">Hellos received ✓</span>',
+      '<span class="muted">Our Hellos not arriving</span>',
+    ],
+    memory: [
+      '<span class="success">INC-2089:</span> firewall ACL',
+      'OSPF multicast blocked',
+    ],
+    reason: [
+      'INIT = one-way adjacency',
+      '<span class="highlight">Top cause:</span> firewall ACL?',
+      '<span class="highlight">Or:</span> area mismatch?',
+      'Check interface first →',
+    ],
+    act: ['<span class="muted">Selecting tool...</span>'],
+    confidence: 25,
+    iteration: 1,
+  },
+  {
+    phase: 'act',
+    status: 'Running: show ip ospf neighbor on rtr-01...',
+    observe: [
+      'State: <span class="warn">INIT</span> on rtr-01',
+    ],
+    memory: [
+      '<span class="success">INC-2089:</span> firewall ACL',
+    ],
+    reason: [
+      'Need to confirm symptom',
+      'Running show command →',
+    ],
+    act: [
+      '<span class="highlight">Tool:</span> show_command',
+      'show ip ospf neighbor',
+      '<span class="muted">device: rtr-01</span>',
+      '<span class="muted">Executing...</span>',
+    ],
+    confidence: 25,
+    iteration: 1,
+  },
+  {
+    phase: 'observe',
+    status: 'Evidence collected — analysing result...',
+    observe: [
+      '<span class="success">Result received:</span>',
+      'Nbr 3.3.3.3 → <span class="warn">INIT</span>',
+      'Interface: <span class="highlight">Gi0/1</span>',
+      '<span class="muted">INIT confirmed ✓</span>',
+    ],
+    memory: [
+      '<span class="success">INC-2089:</span> fw ACL on OSPF',
+      'Neighbour was rtr-01',
+    ],
+    reason: [
+      'INIT confirmed on Gi0/1',
+      '<span class="highlight">Check OSPF config?</span>',
+    ],
+    act: [
+      '<span class="success">show ip ospf nbr</span>',
+      'Result: INIT on Gi0/1',
+    ],
+    confidence: 40,
+    iteration: 1,
+  },
+  {
+    phase: 'reason',
+    status: 'Updating hypothesis — checking OSPF interface config...',
+    observe: [
+      'INIT on Gi0/1 confirmed',
+    ],
+    memory: [
+      '<span class="success">INC-2089:</span> fw ACL',
+      '<span class="success">ospf-exstart:</span> MTU rule',
+    ],
+    reason: [
+      'INIT on specific interface',
+      'Could be: area mismatch',
+      'Standard area = <span class="highlight">0.0.0.0</span>',
+      'Check Gi0/1 area config →',
+    ],
+    act: ['<span class="muted">Selecting next tool...</span>'],
+    confidence: 45,
+    iteration: 2,
+  },
+  {
+    phase: 'act',
+    status: 'Running: show ip ospf interface gi0/1...',
+    observe: ['INIT on Gi0/1 confirmed'],
+    memory: ['<span class="success">INC-2089:</span> fw ACL'],
+    reason: [
+      'Checking area config on Gi0/1',
+    ],
+    act: [
+      '<span class="highlight">Tool:</span> show_command',
+      'show ip ospf int gi0/1',
+      '<span class="muted">device: rtr-01</span>',
+      '<span class="muted">Executing...</span>',
+    ],
+    confidence: 45,
+    iteration: 2,
+  },
+  {
+    phase: 'observe',
+    status: 'Critical evidence found — area mismatch detected!',
+    observe: [
+      '<span class="warn">⚠ MISMATCH FOUND:</span>',
+      'Gi0/1 in Area: <span class="warn">1</span>',
+      'Standard: Area <span class="success">0.0.0.0</span>',
+      '<span class="highlight">Root cause identified!</span>',
+    ],
+    memory: [
+      'Standard: backbone 0.0.0.0',
+      'Per MCP server ✓',
+    ],
+    reason: [
+      'Area 1 ≠ Area 0 (standard)',
+      '<span class="warn">AREA MISMATCH!</span>',
+      'Confidence → <span class="highlight">89%</span>',
+    ],
+    act: [
+      '<span class="success">show ip ospf int gi0/1</span>',
+      'Area: <span class="warn">1</span> (should be 0)',
+    ],
+    confidence: 89,
+    iteration: 2,
+  },
+  {
+    phase: 'verify',
+    status: 'Confidence 89% — generating final diagnosis...',
+    observe: ['Area mismatch confirmed'],
+    memory: ['Standards validated ✓'],
+    reason: ['CONCLUDE → go to Verify'],
+    act: ['Evidence collected ✓'],
+    verify: [
+      '<span class="success">ROOT CAUSE:</span>',
+      'OSPF area mismatch',
+      'rtr-01 Gi0/1 → area 1',
+      '<span class="highlight">FIX: ip ospf 1 area 0</span>',
+    ],
+    confidence: 92,
+    iteration: 2,
+  },
+];
+
+// ── DOM refs ─────────────────────────────────────
+const nodes = {
+  observe: document.getElementById('node-observe'),
+  memory:  document.getElementById('node-memory'),
+  reason:  document.getElementById('node-reason'),
+  act:     document.getElementById('node-act'),
+  verify:  document.getElementById('node-verify'),
+};
+const contents = {
+  observe: document.getElementById('content-observe'),
+  memory:  document.getElementById('content-memory'),
+  reason:  document.getElementById('content-reason'),
+  act:     document.getElementById('content-act'),
+  verify:  document.getElementById('content-verify'),
+};
+const confFill  = document.getElementById('conf-fill');
+const confValue = document.getElementById('conf-value');
+const iterValue = document.getElementById('iter-value');
+const statusDot  = document.getElementById('status-dot');
+const statusText = document.getElementById('status-text');
+
+// ── Arrow canvas ─────────────────────────────────
+// We'll draw arrows using absolute pixel positions after layout
+let arrowEls = {};
+
+function getCenter(el) {
+  const svg  = document.getElementById('arrows-svg');
+  const svgR = svg.getBoundingClientRect();
+  const elR  = el.getBoundingClientRect();
+  return {
+    x: elR.left + elR.width  / 2 - svgR.left,
+    y: elR.top  + elR.height / 2 - svgR.top,
+    t: elR.top  - svgR.top,
+    b: elR.top  + elR.height - svgR.top,
+    l: elR.left - svgR.left,
+    r: elR.left + elR.width  - svgR.left,
+  };
+}
+
+function makePath(id, cls) {
+  const svg = document.getElementById('arrows-svg');
+  const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+  p.setAttribute('id', id);
+  p.classList.add('arrow-path', cls);
+  svg.appendChild(p);
+  return p;
+}
+
+function buildArrows() {
+  const svg = document.getElementById('arrows-svg');
+  svg.innerHTML = svg.querySelector('defs').outerHTML; // keep defs
+
+  const obs = getCenter(nodes.observe);
+  const mem = getCenter(nodes.memory);
+  const rea = getCenter(nodes.reason);
+  const act = getCenter(nodes.act);
+
+  // observe (col2 row1) → reason (col3 row2)
+  // From right edge of observe, arc right-and-down to top-center of reason
+  const p1 = makePath('arr-obs-rea','arrow-observe-reason');
+  p1.setAttribute('d',
+    `M${obs.r} ${obs.y} C${obs.r+50} ${obs.y}, ${rea.x} ${rea.t-50}, ${rea.x} ${rea.t}`);
+
+  // memory (col1 row2) → reason (col3 row2)
+  // Horizontal arc across the middle row
+  const p2 = makePath('arr-mem-rea','arrow-memory-reason');
+  p2.setAttribute('d',
+    `M${mem.r} ${mem.y} C${mem.r+80} ${mem.y}, ${rea.l-80} ${rea.y}, ${rea.l} ${rea.y}`);
+
+  // reason (col3 row2) → act (col2 row3)
+  // From bottom-center of reason, arc down-and-left to right edge of act
+  const p3 = makePath('arr-rea-act','arrow-reason-act');
+  p3.setAttribute('d',
+    `M${rea.x} ${rea.b} C${rea.x} ${rea.b+50}, ${act.r+50} ${act.y}, ${act.r} ${act.y}`);
+
+  // act (col2 row3) → observe (col2 row1)
+  // Loop around left side — C-curve outside left edge
+  const loopX = Math.min(act.l, obs.l) - 70;
+  const p4 = makePath('arr-act-obs','arrow-act-observe');
+  p4.setAttribute('d',
+    `M${act.l} ${act.y} C${loopX} ${act.y}, ${loopX} ${obs.y}, ${obs.l} ${obs.y}`);
+
+  // reason → verify placeholder (rebuilt when verify node is visible)
+  const p5 = makePath('arr-rea-ver','arrow-reason-verify');
+  p5.setAttribute('d', `M0 0`);
+  p5.style.opacity = '0';
+
+  arrowEls = { obsRea: p1, memRea: p2, reaAct: p3, actObs: p4, reaVer: p5 };
+}
+
+function buildVerifyArrow() {
+  if (!arrowEls.reaVer) return;
+  const rea = getCenter(nodes.reason);  // reason is hidden but still laid out
+  const ver = getCenter(nodes.verify);
+  // reason is display:none at this point, so use stored position from before
+  // verify is col2 row2 — arrow comes from where reason was (col3 row2)
+  // Use the last known reason position stored in the arrow's dataset
+  const svg = document.getElementById('arrows-svg');
+  const reaBounds = svg.dataset.reaBounds ? JSON.parse(svg.dataset.reaBounds) : null;
+  if (reaBounds) {
+    arrowEls.reaVer.setAttribute('d',
+      `M${reaBounds.x} ${reaBounds.b} C${reaBounds.x} ${reaBounds.b+40}, ${ver.x+40} ${ver.y}, ${ver.r} ${ver.y}`);
+  }
+}
+
+// ── Activate / deactivate arrows ─────────────────
+function flashArrow(el, color) {
+  if (!el) return;
+  el.style.stroke = color;
+  el.style.strokeWidth = '2.5';
+  el.style.opacity = '1';
+  el.classList.add('active');
+  el.style.setProperty('--active-color', color);
+  // Update arrowhead polygon color
+  document.getElementById('arrow-poly').setAttribute('fill', color);
+  setTimeout(() => {
+    el.style.stroke = '#1e293b';
+    el.style.strokeWidth = '1.5';
+    el.classList.remove('active');
+  }, 1200);
+}
+
+// ── Set node content ──────────────────────────────
+function setContent(nodeId, lines) {
+  const el = contents[nodeId];
+  if (!el) return;
+  el.innerHTML = lines.map(l => `<div class="line">${l}</div>`).join('');
+}
+
+// ── Activate a node ───────────────────────────────
+let activeNodes = new Set();
+function activateNode(id) {
+  Object.keys(nodes).forEach(k => {
+    nodes[k].classList.remove('active');
+  });
+  activeNodes.clear();
+  if (nodes[id]) {
+    nodes[id].classList.add('active');
+    activeNodes.add(id);
+  }
+}
+
+// ── Update confidence ─────────────────────────────
+function setConfidence(pct) {
+  confFill.style.width = pct + '%';
+  confValue.textContent = pct + '%';
+  if (pct >= 85) {
+    confValue.classList.add('high');
+    confFill.classList.add('high');
+  } else {
+    confValue.classList.remove('high');
+    confFill.classList.remove('high');
+  }
+}
+
+// ── Status bar ────────────────────────────────────
+function setStatus(text, running = true) {
+  statusText.textContent = text;
+  statusText.classList.toggle('active', running);
+  statusDot.className = 'status-dot ' + (running ? 'running' : 'done');
+}
+
+// ── Run a step ────────────────────────────────────
+let stepIndex  = 0;
+let isRunning  = false;
+let autoTimer  = null;
+
+function applyStep(s) {
+  // Update contents
+  setContent('observe', s.observe || []);
+  setContent('memory',  s.memory  || []);
+  setContent('reason',  s.reason  || []);
+  setContent('act',     s.act     || []);
+  if (s.verify) setContent('verify', s.verify);
+
+  // Show verify node on verify phase
+  if (s.phase === 'verify') {
+    // Snapshot reason's position before hiding it
+    const svg = document.getElementById('arrows-svg');
+    const rea = getCenter(nodes.reason);
+    svg.dataset.reaBounds = JSON.stringify(rea);
+    nodes.verify.style.display = 'block';
+    nodes.reason.style.display = 'none';
+    activateNode('verify');
+    // Rebuild verify arrow now that verify node has layout
+    setTimeout(() => {
+      buildVerifyArrow();
+      if (arrowEls.reaVer) arrowEls.reaVer.style.opacity = '1';
+      flashArrow(arrowEls.reaVer, '#fb7185');
+    }, 30);
+  } else {
+    nodes.verify.style.display = 'none';
+    nodes.reason.style.display = 'block';
+    activateNode(s.phase);
+    // Flash relevant arrow
+    if (s.phase === 'observe' && stepIndex > 0) flashArrow(arrowEls.actObs, '#38bdf8');
+    if (s.phase === 'memory')  flashArrow(arrowEls.obsRea, '#34d399');
+    if (s.phase === 'reason')  flashArrow(arrowEls.memRea, '#a78bfa');
+    if (s.phase === 'act')     flashArrow(arrowEls.reaAct, '#f5a623');
+    if (arrowEls.reaVer) arrowEls.reaVer.style.opacity = '0';
+  }
+
+  // Confidence + iteration
+  setConfidence(s.confidence);
+  iterValue.textContent = s.iteration;
+  iterValue.classList.toggle('active', s.iteration > 0);
+
+  // Status
+  const isDone = s.phase === 'verify';
+  setStatus(s.status, !isDone);
+
+  if (isDone) {
+    statusDot.className = 'status-dot done';
+  }
+}
+
+function nextStep() {
+  if (stepIndex >= STEPS.length) {
+    // Reset
+    stepIndex = 0;
+    isRunning = false;
+    setStatus('Simulation complete — click to restart', false);
+    statusDot.className = 'status-dot';
+    scheduleNext(3000);
+    return;
+  }
+  applyStep(STEPS[stepIndex]);
+  stepIndex++;
+  scheduleNext(stepIndex === STEPS.length ? 4000 : 2200);
+}
+
+function scheduleNext(delay) {
+  clearTimeout(autoTimer);
+  autoTimer = setTimeout(nextStep, delay);
+}
+
+// ── Start ─────────────────────────────────────────
+function startAnimation() {
+  clearTimeout(autoTimer);
+  stepIndex = 0;
+  isRunning = true;
+  // Reset nodes
+  Object.keys(nodes).forEach(k => nodes[k].classList.remove('active'));
+  nodes.verify.style.display = 'none';
+  nodes.reason.style.display = 'block';
+  setConfidence(0);
+  iterValue.textContent = '0';
+  iterValue.classList.remove('active');
+  nextStep();
+}
+
+// Build arrows after layout
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    buildArrows();
+    // Auto-start after 800ms
+    setTimeout(startAnimation, 800);
+  }, 100);
+});
+
+// Rebuild arrows on resize
+window.addEventListener('resize', () => {
+  clearTimeout(window._resizeTimer);
+  window._resizeTimer = setTimeout(buildArrows, 200);
+});
+
+// Click to restart
+document.body.addEventListener('click', () => {
+  startAnimation();
+});
+</script>
+</body>
+</html>
