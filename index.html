@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI for Networking & Security Engineers Academy</title>
+    <meta name="description" content="Master AI for Networking and Security - 8 chapters, 8 interactive notebooks">
+
+    <!-- Fonts - non-blocking (preload trick prevents render block) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Font Awesome - non-blocking -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"></noscript>
+
+    <!-- Highlight.js CSS - non-blocking -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"></noscript>
+
+    <!-- Custom CSS (local - loads immediately) -->
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>AI NetSec Academy</span>
+            </div>
+            <nav class="main-nav">
+                <button class="nav-btn" data-section="home">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </button>
+                <button class="nav-btn" data-section="curriculum">
+                    <i class="fas fa-book"></i>
+                    <span>Curriculum</span>
+                </button>
+                <button class="nav-btn" data-section="paths">
+                    <i class="fas fa-route"></i>
+                    <span>Learning Paths</span>
+                </button>
+                <button class="nav-btn" data-section="notebooks">
+                    <i class="fas fa-code"></i>
+                    <span>Notebooks</span>
+                </button>
+            </nav>
+            <div class="header-actions">
+                <button class="btn-icon" id="theme-toggle" title="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn-icon" id="fullscreen-toggle" title="Toggle fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <a href="https://github.com/eduardd76/AI_for_networking_and_security_engineers" target="_blank" class="btn-icon" title="GitHub">
+                    <i class="fab fa-github"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Course Volumes</h3>
+                <button class="btn-icon" id="sidebar-toggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="module-search" placeholder="Search chapters...">
+            </div>
+
+            <div class="progress-overview">
+                <div class="progress-label">
+                    <span>Overall Progress</span>
+                    <span class="progress-percent" id="overall-progress">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="progress-label" style="margin-top: var(--spacing-sm); font-size: 0.75rem;">
+                    <span><i class="fas fa-check-circle"></i> <span id="completed-chapters">0</span>/<span id="total-chapters">8</span> Chapters</span>
+                    <span><i class="fas fa-clock"></i> <span id="time-remaining">~60h</span></span>
+                </div>
+            </div>
+
+            <!-- Continue Learning Section -->
+            <div class="continue-learning" id="continue-learning" style="display: none;">
+                <div class="continue-title">
+                    <i class="fas fa-play-circle"></i> Continue Learning
+                </div>
+                <div class="continue-chapter" id="continue-chapter-title">
+                    Loading...
+                </div>
+                <div class="continue-progress">
+                    <i class="fas fa-book-reader"></i>
+                    <span id="continue-chapter-progress">Chapter 1 • Volume 1</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav" id="module-list">
+                <!-- Modules will be loaded here dynamically -->
+            </nav>
+        </aside>
+
+        <!-- Content Area (Tabbed Learning) -->
+        <div class="content-wrapper">
+            <div class="learning-panel" id="learning-panel">
+
+                <!-- Module Banner -->
+                <div class="module-banner" id="module-banner">
+                    <div class="banner-left">
+                        <span class="volume-badge" id="banner-volume">Course Content</span>
+                        <h1 class="banner-title" id="current-module-title">Welcome to AI NetSec Academy</h1>
+                    </div>
+                    <div class="banner-right">
+                        <div class="banner-actions">
+                            <button class="btn-icon" id="bookmark-btn" title="Bookmark">
+                                <i class="far fa-bookmark"></i>
+                            </button>
+                            <button class="btn-icon" id="share-btn" title="Share">
+                                <i class="fas fa-share-alt"></i>
+                            </button>
+                            <button class="btn-icon" id="print-btn" title="Print">
+                                <i class="fas fa-print"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="learning-tabs" id="learning-tabs">
+                    <button class="ltab active" data-tab="concept">
+                        <i class="fas fa-book-open"></i>
+                        <span>Concept</span>
+                    </button>
+                    <button class="ltab" data-tab="code">
+                        <i class="fas fa-code"></i>
+                        <span>Code</span>
+                    </button>
+                    <button class="ltab" data-tab="lab">
+                        <i class="fas fa-flask"></i>
+                        <span>Lab</span>
+                    </button>
+                    <button class="ltab" data-tab="quiz">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Quiz</span>
+                    </button>
+                </div>
+
+                <!-- Tab Panels -->
+                <div class="tab-panels">
+
+                    <!-- Concept: theory prose -->
+                    <div class="tab-panel active" id="tab-concept">
+                        <div class="panel-content" id="theory-content">
+                            <!-- Theory loaded by app-enhanced.js -->
+                        </div>
+                    </div>
+
+                    <!-- Code: extracted code blocks -->
+                    <div class="tab-panel" id="tab-code">
+                        <div class="code-cards-container" id="code-cards">
+                            <div class="code-empty">
+                                <i class="fas fa-code"></i>
+                                <p>Select a chapter to see its code examples</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lab: Colab notebook viewer -->
+                    <div class="tab-panel" id="tab-lab">
+                        <div class="notebook-container" id="notebook-container">
+                            <div class="notebook-placeholder">
+                                <i class="fab fa-python"></i>
+                                <h3>Select a Chapter</h3>
+                                <p>Choose a chapter from the sidebar to view its interactive Colab notebook</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quiz: coming soon -->
+                    <div class="tab-panel" id="tab-quiz">
+                        <div class="quiz-placeholder">
+                            <i class="fas fa-question-circle"></i>
+                            <h3>Quiz Coming Soon</h3>
+                            <p>Self-assessment questions for this chapter are being prepared. Check back soon!</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Learning Footer -->
+                <div class="learning-footer">
+                    <button class="btn btn-secondary" id="prev-module">
+                        <i class="fas fa-chevron-left"></i>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary" id="complete-module">
+                        <i class="fas fa-check"></i>
+                        Mark Complete
+                    </button>
+                    <button class="btn btn-secondary" id="next-module">
+                        Next
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Buttons -->
+    <div class="fab-container">
+        <button class="fab" id="help-fab" title="Help">
+            <i class="fas fa-question"></i>
+        </button>
+        <button class="fab" id="chat-fab" title="AI Assistant">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+    </div>
+
+    <!-- Modal for Welcome/Help -->
+    <div class="modal" id="welcome-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome to AI NetSec Academy! 🛡️</h2>
+                <button class="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="welcome-grid">
+                    <div class="welcome-card">
+                        <i class="fas fa-book-open"></i>
+                        <h3 id="welcome-stat-chapters">8 Chapters</h3>
+                        <p>Comprehensive training across 4 volumes</p>
+                    </div>
+                    <div class="welcome-card">
+                        <i class="fas fa-code"></i>
+                        <h3 id="welcome-stat-notebooks">8 Notebooks</h3>
+                        <p>Interactive Colab notebooks with real examples</p>
+                    </div>
+                    <div class="welcome-card">
+                        <i class="fas fa-route"></i>
+                        <h3>3 Learning Paths</h3>
+                        <p>Beginner, Experienced, Security-focused</p>
+                    </div>
+                    <div class="welcome-card">
+                        <i class="fas fa-certificate"></i>
+                        <h3>Real-World Projects</h3>
+                        <p>NetOps & SecOps case studies</p>
+                    </div>
+                </div>
+                <div class="welcome-actions">
+                    <button class="btn btn-primary" id="start-learning">
+                        <i class="fas fa-rocket"></i>
+                        Start Learning
+                    </button>
+                    <button class="btn btn-secondary" id="take-tour">
+                        <i class="fas fa-map-marked-alt"></i>
+                        Take a Tour
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Loading content...</p>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts - deferred (non-blocking) + versioned (cache-busting) -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <script defer src="js/mini-course-modules.js?v=13"></script>
+    <script defer src="js/notebook-loader.js?v=3"></script>
+    <script defer src="js/app-enhanced.js?v=6"></script>
+</body>
+</html>
