@@ -2868,3 +2868,121 @@ body {
   font-style: italic;
   font-weight: 500;
 }
+
+/* ── Curriculum Section ─────────────────────────────────────────────── */
+.curriculum-section {
+    padding: 2.5rem 2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+.curriculum-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+.curriculum-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+.curriculum-subtitle {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+.curriculum-meta {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    color: var(--accent-blue);
+    font-size: 0.875rem;
+}
+.curriculum-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.curriculum-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.curriculum-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.curriculum-card:hover {
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 20px rgba(100, 181, 246, 0.1);
+}
+.curriculum-card-number {
+    min-width: 2rem;
+    height: 2rem;
+    background: var(--accent-blue);
+    color: #0a0f1e;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+.curriculum-card-icon {
+    font-size: 1.4rem;
+    color: var(--accent-blue);
+    min-width: 1.8rem;
+    text-align: center;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+.curriculum-card-body {
+    flex: 1;
+}
+.curriculum-card-body h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.35rem 0;
+}
+.curriculum-card-body p {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.6rem 0;
+    line-height: 1.5;
+}
+.curriculum-card-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.ctag {
+    font-size: 0.75rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 20px;
+    background: var(--bg-tertiary, var(--bg-primary));
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.curriculum-start-btn {
+    flex-shrink: 0;
+    align-self: center;
+    white-space: nowrap;
+}
+@media (max-width: 600px) {
+    .curriculum-card { flex-wrap: wrap; }
+    .curriculum-start-btn { width: 100%; justify-content: center; }
+}
