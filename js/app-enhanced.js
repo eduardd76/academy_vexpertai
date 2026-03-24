@@ -696,7 +696,6 @@ function setupResizer() {
 // Modals
 // ============================================
 function showWelcomeModal() {
-    hideLoading(); // ensure loading overlay never blocks modal clicks
     document.getElementById('welcome-modal').classList.add('active');
 }
 
@@ -736,9 +735,7 @@ function showLoading() {
 }
 
 function hideLoading() {
-    const overlay = document.getElementById('loading-overlay');
-    overlay.classList.remove('active');
-    overlay.style.pointerEvents = 'none';
+    document.getElementById('loading-overlay').classList.remove('active');
 }
 
 function showToast(title, message, type = 'info') {

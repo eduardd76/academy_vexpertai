@@ -1,0 +1,32 @@
+
+    // Chapter 72: Security Log Analysis & SIEM Integration
+    ,{
+        id: 'vol4-ch72-siem-integration',
+        title: 'Chapter 72: Security Log Analysis & SIEM Integration',
+        volume: 'Volume 4: Security & Compliance',
+        badge: 'SECURITY',
+        icon: 'fa-search',
+        colabNotebook: 'https://colab.research.google.com/github/user/ai-security-academy/blob/main/Vol4_Ch72_SIEM_Integration.ipynb',
+        theory: `# Chapter 72: Security Log Analysis & SIEM Integration
+
+## Introduction
+
+Security logs are the lifeblood of cybersecurity operations. Every authentication, network connection, file access, and system event generates log entries that tell the story of what's happening in your environment. However, modern enterprises generate terabytes of log data daily, making manual analysis impossible.
+
+This chapter teaches you to supercharge SIEM platforms with AI capabilities, enabling intelligent log analysis, automated threat hunting, and contextual alert triage.
+
+REMAINING THEORY CONTENT WOULD GO HERE...
+`,
+        code: `# Chapter 72: Security Log Analysis & SIEM Integration - Implementation
+
+# Implementation code would go here...
+`,
+        examples: [
+            {
+                title: 'Quick Log Analysis',
+                description: 'Parse and analyze security logs',
+                code: `# Example code here`
+            }
+        ],
+        hint: 'Start with high-fidelity detection rules before enabling ML-based anomaly detection.'
+    }

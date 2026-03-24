@@ -46,8 +46,7 @@ class NotebookLoader {
         // Check if it's a local path (starts with ./ or /)
         let fetchUrl;
         if (colabUrl.startsWith('./') || colabUrl.startsWith('/')) {
-            const fn = colabUrl.split('/').pop();
-            fetchUrl = 'https://raw.githubusercontent.com/eduardd76/autonomous-msp-course/main/notebooks/' + fn;
+            fetchUrl = colabUrl;
             console.log('📁 Loading notebook from local path:', fetchUrl);
         } else {
             const rawUrl = this.colabToRawUrl(colabUrl);
@@ -276,8 +275,7 @@ class NotebookLoader {
         if (!AppState.currentModule || !AppState.currentModule.colabNotebook) return;
         const nb = AppState.currentModule.colabNotebook.replace('./', '');
         // Build real Colab URL from the local path
-        const filename = nb.split('/').pop();
-        const colabUrl = 'https://colab.research.google.com/github/eduardd76/autonomous-msp-course/blob/main/notebooks/' + filename;
+        const colabUrl = 'https://colab.research.google.com/github/eduardd76/Claude_code_course/blob/main/ai-networking-security-academy/' + nb;
         window.open(colabUrl, '_blank');
     }
 
