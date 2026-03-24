@@ -275,7 +275,7 @@ class NotebookLoader {
         if (!AppState.currentModule || !AppState.currentModule.colabNotebook) return;
         const nb = AppState.currentModule.colabNotebook.replace('./', '');
         // Build real Colab URL from the local path
-        const colabUrl = 'https://colab.research.google.com/github/eduardd76/Claude_code_course/blob/main/ai-networking-security-academy/' + nb;
+        const colabUrl = 'https://colab.research.google.com/github/eduardd76/academy_vexpertai/blob/main/' + nb;
         window.open(colabUrl, '_blank');
     }
 
