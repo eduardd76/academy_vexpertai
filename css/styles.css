@@ -2986,3 +2986,92 @@ body {
     .curriculum-card { flex-wrap: wrap; }
     .curriculum-start-btn { width: 100%; justify-content: center; }
 }
+
+/* ── Email Capture ───────────────────────────────────────────── */
+.modal-signup {
+    border-top: 1px solid var(--border-color);
+    padding: 1.25rem 2rem 0.5rem;
+    text-align: center;
+}
+.modal-signup-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin: 0 0 0.75rem 0;
+}
+.modal-signup-form {
+    display: flex;
+    gap: 0.5rem;
+    max-width: 420px;
+    margin: 0 auto;
+}
+.modal-signup-meta {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    margin: 0.5rem 0 0 0;
+}
+.signup-email-input {
+    flex: 1;
+    padding: 0.5rem 0.875rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s;
+}
+.signup-email-input:focus {
+    border-color: var(--accent-blue);
+}
+.signup-submit-btn { white-space: nowrap; }
+
+.email-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+    z-index: 1200;
+    padding: 0.875rem 1.5rem;
+}
+.email-bar-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+.email-bar-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+.email-bar-text strong {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+.email-bar-text span {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+.email-bar-form {
+    display: flex;
+    gap: 0.5rem;
+}
+.email-bar-close {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 0 0.25rem;
+    line-height: 1;
+}
+.email-bar-close:hover { color: var(--text-primary); }
+@media (max-width: 600px) {
+    .email-bar-form { width: 100%; }
+    .modal-signup-form { flex-direction: column; }
+}
