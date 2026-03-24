@@ -234,7 +234,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Welcome to AI NetSec Academy! 🛡️</h2>
-                <button class="modal-close">
+                <button class="modal-close" onclick="document.getElementById('welcome-modal').classList.remove('active')">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -251,9 +251,9 @@
                         <p>Interactive Colab notebooks with real examples</p>
                     </div>
                     <div class="welcome-card">
-                        <i class="fas fa-route"></i>
-                        <h3>3 Learning Paths</h3>
-                        <p>Beginner, Experienced, Security-focused</p>
+                        <i class="fas fa-brain"></i>
+                        <h3>ReAct &amp; LangGraph</h3>
+                        <p>Industry-standard agent architectures</p>
                     </div>
                     <div class="welcome-card">
                         <i class="fas fa-certificate"></i>
@@ -262,11 +262,11 @@
                     </div>
                 </div>
                 <div class="welcome-actions">
-                    <button class="btn btn-primary" id="start-learning">
+                    <button class="btn btn-primary" id="start-learning" onclick="document.getElementById('welcome-modal').classList.remove('active')">
                         <i class="fas fa-rocket"></i>
                         Start Learning
                     </button>
-                    <button class="btn btn-secondary" id="take-tour">
+                    <button class="btn btn-secondary" id="take-tour" onclick="document.getElementById('welcome-modal').classList.remove('active')">
                         <i class="fas fa-map-marked-alt"></i>
                         Take a Tour
                     </button>
