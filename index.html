@@ -43,14 +43,6 @@
                     <i class="fas fa-book"></i>
                     <span>Curriculum</span>
                 </button>
-                <button class="nav-btn" data-section="paths">
-                    <i class="fas fa-route"></i>
-                    <span>Learning Paths</span>
-                </button>
-                <button class="nav-btn" data-section="notebooks">
-                    <i class="fas fa-code"></i>
-                    <span>Notebooks</span>
-                </button>
             </nav>
             <div class="header-actions">
                 <button class="btn-icon" id="theme-toggle" title="Toggle theme">
@@ -222,6 +214,24 @@
         </div>
     </main>
 
+
+    <!-- Curriculum Overview Section -->
+    <div id="curriculum-section" class="curriculum-section" style="display:none;">
+        <div class="curriculum-header">
+            <h1>Course Curriculum</h1>
+            <p class="curriculum-subtitle">Build Your First AI Agent from Scratch &mdash; 8 modules, 8 interactive notebooks</p>
+            <div class="curriculum-meta">
+                <span><i class="fas fa-layer-group"></i> 8 Modules</span>
+                <span><i class="fas fa-flask"></i> 8 Colab Notebooks</span>
+                <span><i class="fas fa-clock"></i> ~60 hours</span>
+                <span><i class="fas fa-wifi"></i> Network & Security Focus</span>
+            </div>
+        </div>
+        <div class="curriculum-grid" id="curriculum-grid">
+            <!-- Populated by app-enhanced.js -->
+        </div>
+    </div>
+
     <!-- Floating Action Buttons -->
     <div class="fab-container">
         <button class="fab" id="help-fab" title="Help">
@@ -292,6 +302,6 @@
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
     <script defer src="js/mini-course-modules.js?v=13"></script>
     <script defer src="js/notebook-loader.js?v=4"></script>
-    <script defer src="js/app-enhanced.js?v=7"></script>
+    <script defer src="js/app-enhanced.js?v=8"></script>
 </body>
 </html>
