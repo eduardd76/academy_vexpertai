@@ -626,33 +626,86 @@ function filterNotebookModules() {
     });
 }
 
+function showMainView() {
+    const lp = document.getElementById('learning-panel');
+    const cs = document.getElementById('curriculum-section');
+    const sidebar = document.getElementById('sidebar');
+    if (lp) lp.style.display = '';
+    if (cs) cs.style.display = 'none';
+    if (sidebar) sidebar.style.display = '';
+}
+
+function showCurriculumView() {
+    const lp = document.getElementById('learning-panel');
+    const cs = document.getElementById('curriculum-section');
+    const sidebar = document.getElementById('sidebar');
+    if (lp) lp.style.display = 'none';
+    if (cs) cs.style.display = 'block';
+    if (sidebar) sidebar.style.display = 'none';
+    buildCurriculumGrid();
+}
+
+function buildCurriculumGrid() {
+    const grid = document.getElementById('curriculum-grid');
+    if (!grid || grid.dataset.built) return;
+    grid.dataset.built = '1';
+
+    const modules = (typeof miniCourseModules !== 'undefined' ? miniCourseModules : []);
+    const descriptions = [
+        'Why scripts break and agents don\'t. The four pillars of an agent: Reasoning Engine, Memory, Tools, and Context. ReAct, Planning, and Reflection patterns.',
+        'Build a complete OSPF troubleshooting agent in plain Python — no LLM API key required. Perception-Action loop, tool dispatch, and memory in 80 lines.',
+        'Give your agent hands. SSH connections, REST API calls, database queries — and how to wrap any Python function into a safe, observable tool.',
+        'Give your agent memory. ChromaDB vector store, semantic search over past tickets, and the difference between short-term context and long-term recall.',
+        'Stateful multi-step reasoning with LangGraph. Model agent workflows as directed graphs — exactly like OSPF or STP state machines.',
+        'What your agent knows right now. MCP protocol, RAG pipelines, and knowledge graphs — the three layers of context engineering.',
+        'Production-grade safety. Prompt injection defense, credential management, rate limiting, and the defense-in-depth model applied to AI systems.',
+        'Full capstone: a production NOC agent that investigates OSPF failures end-to-end, logs decisions, and hands off to a human when confidence is low.',
+    ];
+
+    modules.forEach(function(mod, i) {
+        const card = document.createElement('div');
+        card.className = 'curriculum-card';
+        card.innerHTML =
+            '<div class="curriculum-card-number">' + (i + 1) + '</div>' +
+            '<div class="curriculum-card-icon"><i class="fas ' + (mod.icon || 'fa-book') + '"></i></div>' +
+            '<div class="curriculum-card-body">' +
+                '<h3>' + mod.title + '</h3>' +
+                '<p>' + (descriptions[i] || '') + '</p>' +
+                '<div class="curriculum-card-tags">' +
+                    '<span class="ctag"><i class="fas fa-book-open"></i> Concept</span>' +
+                    '<span class="ctag"><i class="fas fa-code"></i> Code</span>' +
+                    '<span class="ctag"><i class="fas fa-flask"></i> Notebook</span>' +
+                '</div>' +
+            '</div>' +
+            '<button class="btn btn-primary curriculum-start-btn" data-id="' + mod.id + '">' +
+                '<i class="fas fa-play"></i> Start' +
+            '</button>';
+        card.querySelector('.curriculum-start-btn').addEventListener('click', function() {
+            showMainView();
+            loadModule(mod.id);
+            document.querySelectorAll('.nav-btn').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.section === 'home');
+            });
+        });
+        grid.appendChild(card);
+    });
+}
+
 function handleTopNav(section) {
-    const searchInput = document.getElementById('module-search');
+    document.querySelectorAll('.nav-btn').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.section === section);
+    });
 
     if (section === 'home') {
+        showMainView();
         const orderedModules = getOrderedModules();
         if (orderedModules[0]) loadModule(orderedModules[0].id);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        showToast('Home', 'Returned to course start', 'info');
         return;
     }
     if (section === 'curriculum') {
-        if (searchInput) searchInput.value = '';
-        searchModules('');
-        setAllVolumesCollapsed(false);
-        showToast('Curriculum', 'Showing all volumes and chapters', 'info');
+        showCurriculumView();
         return;
-    }
-    if (section === 'notebooks') {
-        if (searchInput) searchInput.value = '';
-        searchModules('');
-        setAllVolumesCollapsed(false);
-        filterNotebookModules();
-        showToast('Notebooks', 'Showing chapters with interactive notebooks', 'info');
-        return;
-    }
-    if (section === 'paths') {
-        showToast('Learning Paths', 'Path-specific filtering coming soon.', 'info');
     }
 }
 
